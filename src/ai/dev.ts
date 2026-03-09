@@ -1,1 +1,6 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/analyze-suspicious-text.ts';
+import '@/ai/flows/analyze-suspicious-link.ts';
+import '@/ai/flows/analyze-screenshot-for-scams.ts';
