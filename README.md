@@ -1,5 +1,13 @@
-# Firebase Studio
+# ShieldCheck AI
 
-This is a NextJS starter in Firebase Studio.
+Mobile security app that helps detect phishing messages, scam calls and suspicious links using AI.
 
-To get started, take a look at src/app/page.tsx.
+## Features
+- SMS scam detection
+- Call protection interface
+- Suspicious link analysis
+- Real-time protection dashboard
+- Community scam number reporting
+
+## Goal
+Protect users from digital fraud before they become victims.
