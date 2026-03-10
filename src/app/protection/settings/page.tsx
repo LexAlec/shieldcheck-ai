@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { Settings, ShieldCheck, Phone, MessageSquare, ArrowLeft, Lock, Info, Key, Shield, Smartphone } from "lucide-react";
+import { Settings, ShieldCheck, Phone, MessageSquare, ArrowLeft, Lock, Info, Key, Shield, Smartphone, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,16 @@ import { useUser, useFirestore, useDoc } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ProtectionSettingsPage() {
   const { user } = useUser();
@@ -21,7 +31,48 @@ export default function ProtectionSettingsPage() {
   const settingsRef = user ? doc(firestore, "users", user.uid, "settings") : null;
   const { data: settings } = useDoc(settingsRef);
 
-  const toggleProtection = (key: string, value: boolean) => {
+  const [pendingPermission, setPendingPermission] = useState<{
+    key: string;
+    title: string;
+    description: string;
+    permissions: string[];
+  } | null>(null);
+
+  const handleToggle = (key: string, checked: boolean) => {
+    if (!checked) {
+      // If turning off, just update Firestore directly
+      updateSettings(key, false);
+      return;
+    }
+
+    // If turning on, request "Android" permissions
+    if (key === 'isSmsProtectionEnabled') {
+      setPendingPermission({
+        key,
+        title: "Permitir que ShieldCheck AI envie e veja mensagens SMS?",
+        description: "Necessário para analisar links e detetar phishing em tempo real.",
+        permissions: ["READ_SMS", "RECEIVE_SMS"]
+      });
+    } else if (key === 'isCallProtectionEnabled') {
+      setPendingPermission({
+        key,
+        title: "Permitir que ShieldCheck AI faça e gira chamadas telefónicas?",
+        description: "Necessário para identificar números fraudulentos e exibir alertas de risco.",
+        permissions: ["READ_PHONE_STATE", "READ_CALL_LOG", "ANSWER_PHONE_CALLS"]
+      });
+    } else if (key === 'perm_screening') {
+      setPendingPermission({
+        key,
+        title: "Ativar Serviço de Triagem de Chamadas?",
+        description: "Isto permitirá que o ShieldCheck AI filtre chamadas de spam conhecidas automaticamente.",
+        permissions: ["CALL_SCREENING_SERVICE"]
+      });
+    } else {
+      updateSettings(key, true);
+    }
+  };
+
+  const updateSettings = (key: string, value: boolean) => {
     if (!settingsRef) return;
     
     setDocumentNonBlocking(settingsRef, {
@@ -31,16 +82,34 @@ export default function ProtectionSettingsPage() {
       lastUpdated: new Date().toISOString()
     }, { merge: true });
 
+    if (value) {
+      toast({
+        title: "Proteção Ativada",
+        description: "O teu dispositivo está agora mais seguro."
+      });
+    }
+  };
+
+  const handlePermissionDenied = () => {
     toast({
-      title: "Definições atualizadas",
-      description: "A tua preferência de proteção foi guardada."
+      variant: "destructive",
+      title: "Permissão Negada",
+      description: "Sem estas permissões, o ShieldCheck não consegue proteger-te contra golpes em tempo real.",
     });
+    setPendingPermission(null);
+  };
+
+  const handlePermissionAllowed = () => {
+    if (pendingPermission) {
+      updateSettings(pendingPermission.key, true);
+      setPendingPermission(null);
+    }
   };
 
   const permissions = [
-    { label: "Acesso a SMS", desc: "READ_SMS, RECEIVE_SMS", key: "perm_sms", default: true },
-    { label: "Registo de Chamadas", desc: "READ_CALL_LOG", key: "perm_call_log", default: true },
-    { label: "Serviço de Triagem", desc: "CALL_SCREENING_SERVICE", key: "perm_screening", default: true },
+    { label: "Acesso a SMS", desc: "READ_SMS, RECEIVE_SMS", key: "isSmsProtectionEnabled", default: settings?.isSmsProtectionEnabled ?? false },
+    { label: "Registo de Chamadas", desc: "READ_CALL_LOG", key: "isCallProtectionEnabled", default: settings?.isCallProtectionEnabled ?? false },
+    { label: "Serviço de Triagem", desc: "CALL_SCREENING_SERVICE", key: "perm_screening", default: settings?.perm_screening ?? false },
   ];
 
   return (
@@ -55,55 +124,21 @@ export default function ProtectionSettingsPage() {
       </div>
 
       <section className="space-y-4">
-        <h3 className="text-xs font-bold text-muted-foreground uppercase px-1 tracking-wider">Proteção Geral</h3>
-        <div className="glass-card space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
-                <Phone className="w-5 h-5" />
-              </div>
-              <div className="space-y-0.5">
-                <Label className="text-sm font-bold">Proteção de Chamadas</Label>
-                <p className="text-[10px] text-muted-foreground leading-none">Analisa chamadas em tempo real</p>
-              </div>
-            </div>
-            <Switch 
-              checked={settings?.isCallProtectionEnabled ?? true} 
-              onCheckedChange={(val) => toggleProtection('isCallProtectionEnabled', val)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-cyan-100 p-2 rounded-xl text-cyan-600">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-              <div className="space-y-0.5">
-                <Label className="text-sm font-bold">Proteção de SMS</Label>
-                <p className="text-[10px] text-muted-foreground leading-none">Deteta links e textos fraudulentos</p>
-              </div>
-            </div>
-            <Switch 
-              checked={settings?.isSmsProtectionEnabled ?? true} 
-              onCheckedChange={(val) => toggleProtection('isSmsProtectionEnabled', val)}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <Smartphone className="w-4 h-4 text-gray-400" />
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Permissões Android</h3>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Permissões e Proteção</h3>
         </div>
         <div className="glass-card space-y-6">
           {permissions.map((perm) => (
             <div key={perm.key} className="flex items-center justify-between">
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 max-w-[70%]">
                 <Label className="text-sm font-bold">{perm.label}</Label>
-                <p className="text-[10px] text-muted-foreground font-mono leading-none">{perm.desc}</p>
+                <p className="text-[10px] text-muted-foreground font-mono leading-none break-all">{perm.desc}</p>
               </div>
-              <Switch checked={perm.default} />
+              <Switch 
+                checked={perm.default} 
+                onCheckedChange={(val) => handleToggle(perm.key, val)}
+              />
             </div>
           ))}
         </div>
@@ -131,6 +166,37 @@ export default function ProtectionSettingsPage() {
         <Lock className="w-4 h-4" />
         <span className="text-[10px] font-bold uppercase tracking-widest">Segurança Android-First</span>
       </div>
+
+      <AlertDialog open={!!pendingPermission} onOpenChange={(open) => !open && setPendingPermission(null)}>
+        <AlertDialogContent className="rounded-[2rem] max-w-[320px]">
+          <AlertDialogHeader className="items-center text-center">
+            <div className="bg-primary/10 p-4 rounded-full mb-2">
+              <ShieldCheck className="w-10 h-10 text-primary" />
+            </div>
+            <AlertDialogTitle className="text-lg leading-tight">
+              {pendingPermission?.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground pt-2">
+              {pendingPermission?.description}
+              <div className="mt-4 p-3 bg-gray-50 rounded-2xl text-[10px] font-mono text-left space-y-1">
+                {pendingPermission?.permissions.map(p => (
+                   <div key={p} className="flex items-center gap-2">
+                     <Key className="w-3 h-3" /> {p}
+                   </div>
+                ))}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-col gap-2">
+            <AlertDialogAction onClick={handlePermissionAllowed} className="w-full h-12 rounded-2xl bg-primary font-bold">
+              Permitir
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={handlePermissionDenied} className="w-full h-12 rounded-2xl border-0 font-bold">
+              Negar
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Navbar />
     </div>
