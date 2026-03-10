@@ -1,14 +1,15 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { Phone, ShieldAlert, Ban, CheckCircle, Flag, X, Loader2, Info, AlertTriangle, ShieldX } from "lucide-react";
+import { Phone, ShieldAlert, Ban, CheckCircle, Flag, X, Loader2, AlertTriangle, ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, increment } from "firebase/firestore";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { analyzePhoneNumber } from "@/ai/flows/analyze-phone-number";
 import { cn } from "@/lib/utils";
@@ -60,7 +61,8 @@ export default function CallAlertPage() {
     }, { merge: true });
 
     if (action === 'block') {
-      const blockRef = doc(collection(firestore, "users", user.uid, "blocked_numbers"), phoneNumber.replace(/\s+/g, ''));
+      const blockId = phoneNumber.replace(/[^0-9]/g, '');
+      const blockRef = doc(firestore, "users", user.uid, "blocked_numbers", blockId);
       setDocumentNonBlocking(blockRef, {
         id: blockRef.id,
         phoneNumber,
@@ -68,15 +70,6 @@ export default function CallAlertPage() {
         reason: `IA detetou ${analysis?.scamType || 'fraude'}`
       }, { merge: true });
       toast({ title: "Número Bloqueado", description: "O número foi adicionado à tua lista negra." });
-    } else if (action === 'trust') {
-      const trustRef = doc(collection(firestore, "users", user.uid, "trusted_numbers"), phoneNumber.replace(/\s+/g, ''));
-      setDocumentNonBlocking(trustRef, {
-        id: trustRef.id,
-        phoneNumber,
-        trustTimestamp: timestamp,
-        reason: 'Aprovado manualmente pelo utilizador'
-      }, { merge: true });
-      toast({ title: "Número Confiável", description: "Adicionado aos teus contactos seguros." });
     } else if (action === 'report') {
       const reportRef = doc(collection(firestore, "community_scam_reports"));
       setDocumentNonBlocking(reportRef, {
@@ -88,7 +81,28 @@ export default function CallAlertPage() {
         reportTimestamp: timestamp,
         status: 'Submitted'
       }, { merge: true });
+
+      // Update global aggregate stats
+      const statsId = phoneNumber.replace(/[^0-9]/g, '');
+      const statsRef = doc(firestore, "scam_stats", statsId);
+      setDocumentNonBlocking(statsRef, {
+        phoneNumber,
+        reportCount: increment(1),
+        lastReportDate: timestamp,
+        scamType: analysis?.scamType || 'Unknown',
+      }, { merge: true });
+
       toast({ title: "Reportado", description: "Ajuda coletiva enviada com sucesso." });
+    } else if (action === 'trust') {
+      const trustId = phoneNumber.replace(/[^0-9]/g, '');
+      const trustRef = doc(firestore, "users", user.uid, "trusted_numbers", trustId);
+      setDocumentNonBlocking(trustRef, {
+        id: trustRef.id,
+        phoneNumber,
+        trustTimestamp: timestamp,
+        reason: 'Aprovado manualmente pelo utilizador'
+      }, { merge: true });
+      toast({ title: "Número Confiável", description: "Adicionado aos teus contactos seguros." });
     }
 
     router.push('/protection');
@@ -126,10 +140,6 @@ export default function CallAlertPage() {
           isHighRisk ? "bg-red-500/20 border-red-500/50 shadow-red-500/40" : "bg-amber-500/20 border-amber-500/50 shadow-amber-500/40"
         )}>
           {isHighRisk ? <ShieldX className="w-20 h-20 text-red-500" /> : <ShieldAlert className="w-20 h-20 text-amber-500" />}
-          <div className={cn(
-            "absolute -top-2 -right-2 w-6 h-6 rounded-full animate-ping",
-            isHighRisk ? "bg-red-500" : "bg-amber-500"
-          )} />
         </div>
         
         <div className="space-y-2">
@@ -186,7 +196,7 @@ export default function CallAlertPage() {
             onClick={() => handleAction('block')} 
             className="h-16 rounded-[1.5rem] bg-red-600 hover:bg-red-700 text-lg font-black shadow-2xl shadow-red-600/30 border-0"
           >
-            <Ban className="w-6 h-6 mr-2" /> Bloquear Agora
+            Bloquear Agora
           </Button>
           
           <div className="grid grid-cols-2 gap-3">

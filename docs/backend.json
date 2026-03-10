@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "AnalysisHistory": {
@@ -162,7 +163,7 @@
         },
         "status": {
           "type": "string",
-          "description": "The current status of the report (e.g., 'Submitted', 'PendingReview', 'ConfirmedScam', 'FalsePositive'). This can be used for community database integration."
+          "description": "The current status of the report (e.g., 'Submitted', 'PendingReview', 'ConfirmedScam', 'FalsePositive')."
         }
       },
       "required": [
@@ -173,27 +174,57 @@
         "reportTimestamp"
       ]
     },
+    "ScamStats": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ScamStats",
+      "type": "object",
+      "description": "Aggregated statistics for reported scam phone numbers.",
+      "properties": {
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number being tracked."
+        },
+        "reportCount": {
+          "type": "number",
+          "description": "Total number of community reports for this number."
+        },
+        "lastReportDate": {
+          "type": "string",
+          "description": "Most recent report timestamp.",
+          "format": "date-time"
+        },
+        "scamType": {
+          "type": "string",
+          "description": "The primary scam type associated with this number."
+        },
+        "isHighRisk": {
+          "type": "boolean",
+          "description": "Automatically flagged as high risk if reportCount exceeds threshold."
+        }
+      },
+      "required": ["phoneNumber", "reportCount", "lastReportDate"]
+    },
     "UserSettings": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserSettings",
       "type": "object",
-      "description": "Stores user-specific preferences and settings for the ShieldCheck AI application, including real-time protection toggles and subscription status.",
+      "description": "Stores user-specific preferences and settings for the ShieldCheck AI application.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user's settings (e.g., a fixed device ID or user ID if authenticated)."
+          "description": "Unique identifier for the user's settings."
         },
         "isCallProtectionEnabled": {
           "type": "boolean",
-          "description": "Indicates whether real-time protection for incoming calls is enabled by the user."
+          "description": "Indicates whether real-time protection for incoming calls is enabled."
         },
         "isSmsProtectionEnabled": {
           "type": "boolean",
-          "description": "Indicates whether real-time protection for incoming SMS messages is enabled by the user."
+          "description": "Indicates whether real-time protection for incoming SMS messages is enabled."
         },
         "unlimitedAnalysisSubscription": {
           "type": "boolean",
-          "description": "Indicates if the user has an active premium subscription, granting unlimited analyses and advanced features."
+          "description": "Indicates if the user has an active premium subscription."
         },
         "lastUpdated": {
           "type": "string",
@@ -225,16 +256,10 @@
           "schema": {
             "$ref": "#/backend/entities/AnalysisHistory"
           },
-          "description": "Stores a comprehensive record of all scam analyses performed by the user, including both manual text/link/screenshot inputs and real-time incoming call/SMS detections. This path leverages user-based ownership for private data, ensuring Authorization Independence.",
+          "description": "User's private analysis history.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this analysis history."
-            },
-            {
-              "name": "analysisId",
-              "description": "The unique identifier for a specific analysis record."
-            }
+            { "name": "userId" },
+            { "name": "analysisId" }
           ]
         }
       },
@@ -245,16 +270,10 @@
           "schema": {
             "$ref": "#/backend/entities/BlockedPhoneNumber"
           },
-          "description": "Contains phone numbers that the user has explicitly chosen to block. This ensures only the owner can manage their personal blocked list, maintaining Authorization Independence.",
+          "description": "User's personal blocked list.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this blocked phone number list."
-            },
-            {
-              "name": "blockedPhoneNumberId",
-              "description": "The unique identifier for a specific blocked phone number entry."
-            }
+            { "name": "userId" },
+            { "name": "blockedPhoneNumberId" }
           ]
         }
       },
@@ -265,16 +284,10 @@
           "schema": {
             "$ref": "#/backend/entities/TrustedPhoneNumber"
           },
-          "description": "Stores phone numbers that the user has explicitly marked as trusted, preventing them from being flagged as suspicious. This ensures only the owner can manage their personal trusted list, maintaining Authorization Independence.",
+          "description": "User's personal trusted list.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this trusted phone number list."
-            },
-            {
-              "name": "trustedPhoneNumberId",
-              "description": "The unique identifier for a specific trusted phone number entry."
-            }
+            { "name": "userId" },
+            { "name": "trustedPhoneNumberId" }
           ]
         }
       },
@@ -285,12 +298,22 @@
           "schema": {
             "$ref": "#/backend/entities/ScamReport"
           },
-          "description": "A public collection for scam reports submitted by authenticated users, contributing to a shared, community-driven database of known scams. This collection does not contain sensitive user-specific data and its access patterns are segregated from private user data.",
+          "description": "Individual scam reports from users.",
           "params": [
-            {
-              "name": "scamReportId",
-              "description": "The unique identifier for a specific scam report."
-            }
+            { "name": "scamReportId" }
+          ]
+        }
+      },
+      {
+        "path": "scam_stats/{phoneNumber}",
+        "definition": {
+          "entityName": "ScamStats",
+          "schema": {
+            "$ref": "#/backend/entities/ScamStats"
+          },
+          "description": "Aggregated scam data per phone number.",
+          "params": [
+            { "name": "phoneNumber" }
           ]
         }
       },
@@ -301,16 +324,13 @@
           "schema": {
             "$ref": "#/backend/entities/UserSettings"
           },
-          "description": "Stores user-specific preferences and settings, including toggles for real-time call and SMS protection. Each user has one settings document, ensuring Authorization Independence for personal settings.",
+          "description": "User preferences.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns these settings."
-            }
+            { "name": "userId" }
           ]
         }
       }
     ],
-    "reasoning": "The recommended Firestore structure is designed with a strong emphasis on Authorization Independence, Structural Segregation, and clear Access Modeling, directly addressing the core design principles for security, scalability, and debuggability. All user-specific data, including `AnalysisHistory`, `BlockedPhoneNumber`, `TrustedPhoneNumber`, and `UserSettings`, is structured under dedicated subcollections within a user's document path (e.g., `/users/{userId}/analysis_history`). This strict path-based ownership ensures that security rules can directly compare `request.auth.uid` with the `userId` wildcard, eliminating any need for `get()` calls to parent documents for authorization. This is critical for maintaining Authorization Independence and supporting atomic operations without introducing security vulnerabilities or performance bottlenecks.\n\nFraud call and SMS alerts, which are new real-time protection features, are naturally integrated into the existing `AnalysisHistory` entity. By storing these under `/users/{userId}/analysis_history/{analysisId}`, they inherit the robust, user-owned security posture. The `analysisType` field within the `AnalysisHistory` document (e.g., 'IncomingCall', 'IncomingSMS') will differentiate these specific types of alerts.\n\nQAPs (Queries are not Filters) are robustly supported by this structure. For all user-owned data collections (e.g., `analysis_history`, `blocked_numbers`, `trusted_numbers`), users will only query their specific subcollections (e.g., `/users/alice_uid/analysis_history`). Firestore security rules can then simply check `request.auth.uid == userId` for read/write access. This approach ensures that `list` operations are inherently secure because the query itself is scoped to the authorized user's data, meaning no server-side filtering is required within the security rules. The rules act as guards, not as data manipulators, simplifying their logic and improving performance.\n\nCommunity-driven data, like `ScamReport`, is segregated into its own top-level collection (`/community_scam_reports`). This separation ensures that its potentially broader access requirements (e.g., authenticated users can report, backend systems can read for analysis) do not conflict with the strict privacy needs of individual user data. This segregation aligns with the Homogeneous Security Posture mandate, as all documents within `/community_scam_reports` will share a similar security profile, simplifying rules for this collection as well. No denormalization of authorization context is needed for `ScamReport` as its access is not tied to a specific user's private parent document for authorization purposes."
+    "reasoning": "The structure is extended to include aggregate statistics per phone number in a dedicated global collection. This allows the app to efficiently track how many times a specific number has been reported across the entire community and flag high-risk numbers without scanning all individual reports."
   }
 }

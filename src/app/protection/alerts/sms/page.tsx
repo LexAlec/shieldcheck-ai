@@ -1,15 +1,16 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { MessageSquare, ShieldAlert, Ban, CheckCircle, Flag, X, Loader2, Sparkles, ShieldCheck, Lock, AlertTriangle, ShieldX } from "lucide-react";
+import { MessageSquare, ShieldAlert, Ban, CheckCircle, Flag, X, Loader2, Sparkles, Lock, AlertTriangle, ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, increment } from "firebase/firestore";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { analyzeSuspiciousText } from "@/ai/flows/analyze-suspicious-text";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,8 @@ export default function SmsAlertPage() {
     }, { merge: true });
 
     if (action === 'block') {
-      const blockRef = doc(collection(firestore, "users", user.uid, "blocked_numbers"), phoneNumber.replace(/\s+/g, ''));
+      const blockId = phoneNumber.replace(/[^0-9]/g, '');
+      const blockRef = doc(firestore, "users", user.uid, "blocked_numbers", blockId);
       setDocumentNonBlocking(blockRef, { 
         id: blockRef.id, 
         phoneNumber, 
@@ -81,9 +83,21 @@ export default function SmsAlertPage() {
         reportTimestamp: timestamp,
         status: 'Submitted'
       }, { merge: true });
+
+      // Update global aggregate stats
+      const statsId = phoneNumber.replace(/[^0-9]/g, '');
+      const statsRef = doc(firestore, "scam_stats", statsId);
+      setDocumentNonBlocking(statsRef, {
+        phoneNumber,
+        reportCount: increment(1),
+        lastReportDate: timestamp,
+        scamType: analysis?.scamType || 'SMS Scam',
+      }, { merge: true });
+
       toast({ title: "SMS Reportado", description: "Obrigado por proteger a comunidade." });
     } else if (action === 'trust') {
-      const trustRef = doc(collection(firestore, "users", user.uid, "trusted_numbers"), phoneNumber.replace(/\s+/g, ''));
+      const trustId = phoneNumber.replace(/[^0-9]/g, '');
+      const trustRef = doc(firestore, "users", user.uid, "trusted_numbers", trustId);
       setDocumentNonBlocking(trustRef, {
         id: trustRef.id,
         phoneNumber,
