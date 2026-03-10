@@ -1,0 +1,316 @@
+{
+  "entities": {
+    "AnalysisHistory": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AnalysisHistory",
+      "type": "object",
+      "description": "Stores a comprehensive record of all scam analyses performed by the app, including user-initiated checks (text, link, screenshot) and real-time call/SMS detections.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the analysis record."
+        },
+        "analysisType": {
+          "type": "string",
+          "description": "The method or source of the analysis (e.g., 'TextInput', 'LinkCheck', 'ScreenshotScan', 'IncomingCall', 'IncomingSMS')."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number associated with the analysis, if applicable (e.g., for 'IncomingCall' or 'IncomingSMS')."
+        },
+        "contentAnalyzed": {
+          "type": "string",
+          "description": "The text or URL content that was analyzed. For screenshots, this is the extracted text; for SMS, it's the message body. For incoming calls, this may be an empty string if no specific textual content is available."
+        },
+        "analysisTimestamp": {
+          "type": "string",
+          "description": "The date and time when the analysis was performed or the alert was triggered.",
+          "format": "date-time"
+        },
+        "riskLevel": {
+          "type": "string",
+          "description": "The assessed risk level of the content or interaction (e.g., 'Low', 'Medium', 'High', 'VeryHigh')."
+        },
+        "scamType": {
+          "type": "string",
+          "description": "The detected type of scam or threat (e.g., 'Phishing', 'FakeBankAlert', 'UrgencyManipulation', 'FakeJobOffer', 'PaymentFraud', 'Unknown')."
+        },
+        "detectionReasons": {
+          "type": "array",
+          "description": "A list of specific signs or patterns identified by the AI that led to the risk assessment.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recommendations": {
+          "type": "array",
+          "description": "A list of practical safety recommendations provided to the user based on the analysis.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "userAction": {
+          "type": "string",
+          "description": "The action taken by the user in response to a real-time alert or a saved manual analysis (e.g., 'Blocked', 'Ignored', 'Reported', 'AddedToTrusted', 'None'). Defaults to 'None' if no action was taken or for manual analyses not requiring an action."
+        },
+        "userActionTimestamp": {
+          "type": "string",
+          "description": "The date and time when the user took a specific action, if any.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "analysisType",
+        "analysisTimestamp",
+        "riskLevel",
+        "scamType",
+        "detectionReasons",
+        "recommendations"
+      ]
+    },
+    "BlockedPhoneNumber": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BlockedPhoneNumber",
+      "type": "object",
+      "description": "Stores phone numbers that the user has explicitly chosen to block from incoming calls or SMS messages.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the blocked phone number entry."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number that has been added to the block list."
+        },
+        "blockTimestamp": {
+          "type": "string",
+          "description": "The date and time when the number was added to the block list.",
+          "format": "date-time"
+        },
+        "reason": {
+          "type": "string",
+          "description": "An optional reason or context for blocking the number (e.g., 'Reported Scam by AI', 'Manually Added')."
+        }
+      },
+      "required": [
+        "id",
+        "phoneNumber",
+        "blockTimestamp"
+      ]
+    },
+    "TrustedPhoneNumber": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TrustedPhoneNumber",
+      "type": "object",
+      "description": "Stores phone numbers that the user has explicitly marked as trusted, preventing them from being flagged as suspicious by real-time protection.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the trusted phone number entry."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number that has been added to the trusted list."
+        },
+        "trustTimestamp": {
+          "type": "string",
+          "description": "The date and time when the number was added to the trusted list.",
+          "format": "date-time"
+        },
+        "reason": {
+          "type": "string",
+          "description": "An optional reason or context for trusting the number (e.g., 'Known Contact', 'Official Service Number')."
+        }
+      },
+      "required": [
+        "id",
+        "phoneNumber",
+        "trustTimestamp"
+      ]
+    },
+    "ScamReport": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ScamReport",
+      "type": "object",
+      "description": "Stores reports submitted by users about suspicious phone numbers or messages, contributing to a community-driven scam database.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the scam report."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The reported phone number."
+        },
+        "reportType": {
+          "type": "string",
+          "description": "The type of interaction reported (e.g., 'Call', 'SMS')."
+        },
+        "reportedContent": {
+          "type": "string",
+          "description": "The content of the suspicious SMS message or a summary/context of the suspicious call."
+        },
+        "scamType": {
+          "type": "string",
+          "description": "The type of scam identified by the user or system for the report (e.g., 'Phishing', 'FakeBankAlert', 'UrgencyManipulation')."
+        },
+        "reportTimestamp": {
+          "type": "string",
+          "description": "The date and time when the scam was reported.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the report (e.g., 'Submitted', 'PendingReview', 'ConfirmedScam', 'FalsePositive'). This can be used for community database integration."
+        }
+      },
+      "required": [
+        "id",
+        "phoneNumber",
+        "reportType",
+        "scamType",
+        "reportTimestamp"
+      ]
+    },
+    "UserSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserSettings",
+      "type": "object",
+      "description": "Stores user-specific preferences and settings for the ShieldCheck AI application, including real-time protection toggles and subscription status.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user's settings (e.g., a fixed device ID or user ID if authenticated)."
+        },
+        "isCallProtectionEnabled": {
+          "type": "boolean",
+          "description": "Indicates whether real-time protection for incoming calls is enabled by the user."
+        },
+        "isSmsProtectionEnabled": {
+          "type": "boolean",
+          "description": "Indicates whether real-time protection for incoming SMS messages is enabled by the user."
+        },
+        "unlimitedAnalysisSubscription": {
+          "type": "boolean",
+          "description": "Indicates if the user has an active premium subscription, granting unlimited analyses and advanced features."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "The date and time when these settings were last modified.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "isCallProtectionEnabled",
+        "isSmsProtectionEnabled",
+        "unlimitedAnalysisSubscription",
+        "lastUpdated"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "users/{userId}/analysis_history/{analysisId}",
+        "definition": {
+          "entityName": "AnalysisHistory",
+          "schema": {
+            "$ref": "#/backend/entities/AnalysisHistory"
+          },
+          "description": "Stores a comprehensive record of all scam analyses performed by the user, including both manual text/link/screenshot inputs and real-time incoming call/SMS detections. This path leverages user-based ownership for private data, ensuring Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who owns this analysis history."
+            },
+            {
+              "name": "analysisId",
+              "description": "The unique identifier for a specific analysis record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/blocked_numbers/{blockedPhoneNumberId}",
+        "definition": {
+          "entityName": "BlockedPhoneNumber",
+          "schema": {
+            "$ref": "#/backend/entities/BlockedPhoneNumber"
+          },
+          "description": "Contains phone numbers that the user has explicitly chosen to block. This ensures only the owner can manage their personal blocked list, maintaining Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who owns this blocked phone number list."
+            },
+            {
+              "name": "blockedPhoneNumberId",
+              "description": "The unique identifier for a specific blocked phone number entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/trusted_numbers/{trustedPhoneNumberId}",
+        "definition": {
+          "entityName": "TrustedPhoneNumber",
+          "schema": {
+            "$ref": "#/backend/entities/TrustedPhoneNumber"
+          },
+          "description": "Stores phone numbers that the user has explicitly marked as trusted, preventing them from being flagged as suspicious. This ensures only the owner can manage their personal trusted list, maintaining Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who owns this trusted phone number list."
+            },
+            {
+              "name": "trustedPhoneNumberId",
+              "description": "The unique identifier for a specific trusted phone number entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "community_scam_reports/{scamReportId}",
+        "definition": {
+          "entityName": "ScamReport",
+          "schema": {
+            "$ref": "#/backend/entities/ScamReport"
+          },
+          "description": "A public collection for scam reports submitted by authenticated users, contributing to a shared, community-driven database of known scams. This collection does not contain sensitive user-specific data and its access patterns are segregated from private user data.",
+          "params": [
+            {
+              "name": "scamReportId",
+              "description": "The unique identifier for a specific scam report."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/settings",
+        "definition": {
+          "entityName": "UserSettings",
+          "schema": {
+            "$ref": "#/backend/entities/UserSettings"
+          },
+          "description": "Stores user-specific preferences and settings, including toggles for real-time call and SMS protection. Each user has one settings document, ensuring Authorization Independence for personal settings.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who owns these settings."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure is designed with a strong emphasis on Authorization Independence, Structural Segregation, and clear Access Modeling, directly addressing the core design principles for security, scalability, and debuggability. All user-specific data, including `AnalysisHistory`, `BlockedPhoneNumber`, `TrustedPhoneNumber`, and `UserSettings`, is structured under dedicated subcollections within a user's document path (e.g., `/users/{userId}/analysis_history`). This strict path-based ownership ensures that security rules can directly compare `request.auth.uid` with the `userId` wildcard, eliminating any need for `get()` calls to parent documents for authorization. This is critical for maintaining Authorization Independence and supporting atomic operations without introducing security vulnerabilities or performance bottlenecks.\n\nFraud call and SMS alerts, which are new real-time protection features, are naturally integrated into the existing `AnalysisHistory` entity. By storing these under `/users/{userId}/analysis_history/{analysisId}`, they inherit the robust, user-owned security posture. The `analysisType` field within the `AnalysisHistory` document (e.g., 'IncomingCall', 'IncomingSMS') will differentiate these specific types of alerts.\n\nQAPs (Queries are not Filters) are robustly supported by this structure. For all user-owned data collections (e.g., `analysis_history`, `blocked_numbers`, `trusted_numbers`), users will only query their specific subcollections (e.g., `/users/alice_uid/analysis_history`). Firestore security rules can then simply check `request.auth.uid == userId` for read/write access. This approach ensures that `list` operations are inherently secure because the query itself is scoped to the authorized user's data, meaning no server-side filtering is required within the security rules. The rules act as guards, not as data manipulators, simplifying their logic and improving performance.\n\nCommunity-driven data, like `ScamReport`, is segregated into its own top-level collection (`/community_scam_reports`). This separation ensures that its potentially broader access requirements (e.g., authenticated users can report, backend systems can read for analysis) do not conflict with the strict privacy needs of individual user data. This segregation aligns with the Homogeneous Security Posture mandate, as all documents within `/community_scam_reports` will share a similar security profile, simplifying rules for this collection as well. No denormalization of authorization context is needed for `ScamReport` as its access is not tied to a specific user's private parent document for authorization purposes."
+  }
+}

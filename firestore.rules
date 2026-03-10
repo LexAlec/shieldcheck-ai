@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * SHIELDCHECK AI - SECURITY RULES DOCUMENTATION
+     * 
+     * Core Philosophy: 
+     * This ruleset implements a strict User-Ownership model. All personal safety data 
+     * (history, blocked lists, trusted numbers, and settings) is stored within 
+     * user-specific paths to ensure private data remains inaccessible to others. 
+     * Community data is segregated to allow shared intelligence while protecting 
+     * individual privacy.
+     * 
+     * Data Structure:
+     * - /users/{userId}: The root document for a user.
+     * - /users/{userId}/analysis_history/{id}: Individual scam/fraud detection records.
+     * - /users/{userId}/blocked_numbers/{id}: User-managed block list.
+     * - /users/{userId}/trusted_numbers/{id}: User-managed allow list.
+     * - /users/{userId}/settings: User-specific app configuration and subscription status.
+     * - /community_scam_reports/{id}: Shared repository of reported scams.
+     * 
+     * Key Security Decisions:
+     * 1. Path-Based Authorization: We rely on the userId in the document path to 
+     *    authorize requests, matching it against the authenticated user's UID.
+     * 2. Implicit Hierarchy: By nesting sensitive collections under the user document, 
+     *    we prevent cross-user data leakage.
+     * 3. Integrity Checks: We enforce that internal document IDs match the Firestore 
+     *    document IDs to prevent data-path mismatches.
+     * 4. Community Reporting: Authenticated users can contribute to the global database, 
+     *    but management of those reports is restricted to prevent unauthorized tampering.
+     * 
+     * Denormalization for Authorization:
+     * Ownership fields (like userId) are implicitly handled via the hierarchical 
+     * structure. Internal ID fields are validated to ensure consistency with the 
+     * path-based identifiers used for primary lookups.
+     */
+
+    // --- Helper Functions ---
+
+    /** @description Checks if the user is authenticated with a valid UID. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user's UID matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Verifies ownership and ensures the document exists for state-changing operations. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for the root user document.
+     * @path /users/{userId}
+     * @allow Authenticated user to create and manage their own profile (create, get, update).
+     * @deny Any user attempting to read or write to a different user's profile.
+     * @principle Self-creation and strict ownership.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Users should not be listable for privacy.
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Stores the comprehensive record of scam analyses for a specific user.
+       * @path /users/{userId}/analysis_history/{analysisId}
+       * @allow User (userId_123) to list their history (list) or view a specific scan (get).
+       * @deny User (userId_abc) attempting to view history belonging to userId_123.
+       * @principle Path-based ownership and relational integrity.
+       */
+      match /analysis_history/{analysisId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.id == analysisId;
+        allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User's personal list of blocked phone numbers.
+       * @path /users/{userId}/blocked_numbers/{blockedPhoneNumberId}
+       * @allow User to add a number to their block list (create).
+       * @deny Unauthenticated write or writing to another user's block list.
+       * @principle Restricted access to a user's own data tree.
+       */
+      match /blocked_numbers/{blockedPhoneNumberId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.id == blockedPhoneNumberId;
+        allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User's personal list of trusted phone numbers.
+       * @path /users/{userId}/trusted_numbers/{trustedPhoneNumberId}
+       * @allow User to manage their trusted contacts.
+       * @deny Access by any other user.
+       * @principle Path-based ownership.
+       */
+      match /trusted_numbers/{trustedPhoneNumberId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.id == trustedPhoneNumberId;
+        allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User-specific configuration and protection toggles.
+       * @path /users/{userId}/settings
+       * @allow User to read and update their own protection settings.
+       * @deny Listing settings (singleton doc) or accessing another's settings.
+       * @principle Authorization independence for personal settings.
+       */
+      match /settings {
+        allow get: if isOwner(userId);
+        allow list: if false; 
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Shared community database for reported scammers.
+     * @path /community_scam_reports/{scamReportId}
+     * @allow Any signed-in user to view the database (get, list) or submit a report (create).
+     * @deny Unauthenticated access or unauthorized modifications.
+     * @principle Shared access for authenticated collaborators with immutable reports.
+     */
+    match /community_scam_reports/{scamReportId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      
+      // CRITICAL: Cannot implement owner-only writes. The 'ScamReport' entity 
+      // is missing an 'ownerId' or 'authorId' field in the schema.
+      // Modifying or deleting reports is currently restricted to prevent vandalism.
+      allow update, delete: if false; // TODO: Add owner validation once the schema includes a reporter UID.
+    }
+  }
+}
