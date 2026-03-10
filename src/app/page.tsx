@@ -6,7 +6,7 @@ export default function WelcomePage() {
   return (
     <div className="flex-1 flex flex-col justify-between p-8 pt-20 primary-gradient text-white">
       <div className="flex flex-col items-center text-center space-y-6">
-        <div className="bg-white/20 p-6 rounded-[2rem] backdrop-blur-sm border border-white/30 shadow-2xl animate-bounce-slow">
+        <div className="bg-white/20 p-6 rounded-[2rem] backdrop-blur-sm border border-white/30 shadow-2xl">
           <ShieldCheck className="w-20 h-20 text-white" />
         </div>
         

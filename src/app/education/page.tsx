@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/layout/Navbar";
-import { BookOpen, AlertCircle, ShieldCheck, Banknote, Globe, UserCheck, MessageSquareWarning } from "lucide-react";
+import { BookOpen, AlertCircle, ShieldCheck, Banknote, Globe, UserCheck, MessageSquare, AlertTriangle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function EducationPage() {
@@ -24,7 +24,7 @@ export default function EducationPage() {
     },
     {
       title: "Burlas no WhatsApp",
-      icon: MessageSquareWarning,
+      icon: MessageSquare,
       color: "bg-emerald-500",
       content: "A técnica do 'Olá pai, olá mãe'. O burlão finge ser um familiar que mudou de número e pede dinheiro urgente para uma emergência. Confirma sempre por chamada antes de transferir!"
     }
