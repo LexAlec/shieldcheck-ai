@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
-import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight, Lock, Shield, ArrowRight } from "lucide-react";
+import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight, Lock, Shield, ArrowRight, ShieldAlert, ShieldIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDoc, useUser, useFirestore } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { notificationService } from "@/lib/notification-service";
+import { cn } from "@/lib/utils";
 
 export default function ProtectionPage() {
   const { user } = useUser();
@@ -45,7 +46,12 @@ export default function ProtectionPage() {
     { title: "Base Comunitária", href: "/protection/community", icon: Users, color: "bg-indigo-500" },
   ];
 
-  const isProtectionActive = settings?.isCallProtectionEnabled || settings?.isSmsProtectionEnabled;
+  const isSmsActive = !!settings?.isSmsProtectionEnabled;
+  const isCallActive = !!settings?.isCallProtectionEnabled;
+  const isScreeningActive = !!settings?.perm_screening;
+
+  const allActive = isSmsActive && isCallActive && isScreeningActive;
+  const someActive = isSmsActive || isCallActive || isScreeningActive;
 
   return (
     <div className="flex-1 flex flex-col p-6 pb-24 space-y-8 overflow-y-auto bg-gray-50/50">
@@ -63,38 +69,77 @@ export default function ProtectionPage() {
         </Link>
       </header>
 
-      <section className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${isProtectionActive ? "bg-green-500 animate-pulse" : "bg-gray-300"}`} />
-            <span className="font-bold text-gray-700">Monitorização em Tempo Real</span>
-          </div>
-          <Badge className={isProtectionActive ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-500 border-gray-200"}>
-            {isProtectionActive ? "Ativa" : "Desativada"}
-          </Badge>
-        </div>
-
-        {!isProtectionActive && (
-          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3 items-start">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-amber-800 leading-none">Proteção Desligada</p>
-              <p className="text-[10px] text-amber-700 leading-tight">Ativa os filtros nas definições para detetar burlas automaticamente.</p>
-              <Link href="/protection/settings" className="text-[10px] font-bold text-amber-600 underline flex items-center gap-1">
-                Ativar Agora <ArrowRight className="w-2 h-2" />
-              </Link>
+      {/* Status Indicator Banner */}
+      <section className="animate-in fade-in slide-in-from-top-2 duration-500">
+        <div className={cn(
+          "rounded-[2rem] p-6 shadow-lg border transition-all duration-300",
+          allActive 
+            ? "bg-green-600 border-green-500 text-white" 
+            : someActive 
+              ? "bg-amber-500 border-amber-400 text-white"
+              : "bg-white border-gray-100 text-gray-800"
+        )}>
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "p-3 rounded-2xl",
+                allActive ? "bg-white/20" : someActive ? "bg-white/20" : "bg-gray-100"
+              )}>
+                {allActive ? (
+                  <ShieldCheck className="w-6 h-6" />
+                ) : someActive ? (
+                  <ShieldAlert className="w-6 h-6" />
+                ) : (
+                  <ShieldIcon className="w-6 h-6 text-gray-400" />
+                )}
+              </div>
+              <div className="space-y-0.5">
+                <h2 className="text-xl font-black leading-tight">
+                  {allActive ? "Maximum protection enabled" : someActive ? "Protection incomplete" : "Proteção Desativada"}
+                </h2>
+                <p className={cn(
+                  "text-xs font-medium opacity-80",
+                  !someActive && "text-muted-foreground"
+                )}>
+                  {allActive 
+                    ? "Todos os filtros de IA estão ativos." 
+                    : someActive 
+                      ? "Algumas permissões estão em falta." 
+                      : "Ativa os filtros para estares seguro."}
+                </p>
+              </div>
             </div>
           </div>
-        )}
 
-        <div className="grid grid-cols-2 gap-4">
-          {stats.map((s, i) => (
-            <div key={i} className="bg-gray-50 rounded-2xl p-4 space-y-1">
-              <s.icon className={`w-5 h-5 ${s.color}`} />
-              <p className="text-2xl font-bold text-gray-800">{s.value}</p>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold">{s.label}</p>
-            </div>
-          ))}
+          {!allActive && (
+            <Link href="/protection/settings">
+              <Button 
+                variant="secondary" 
+                className={cn(
+                  "w-full rounded-xl font-bold h-10 shadow-sm",
+                  someActive ? "bg-white/20 hover:bg-white/30 text-white border-0" : ""
+                )}
+              >
+                {someActive ? "Resolver Problemas" : "Ativar Proteção"} <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          )}
+
+          <div className="grid grid-cols-2 gap-3 mt-6">
+            {stats.map((s, i) => (
+              <div key={i} className={cn(
+                "rounded-2xl p-4 space-y-1",
+                allActive || someActive ? "bg-white/10" : "bg-gray-50"
+              )}>
+                <s.icon className={cn(
+                  "w-4 h-4",
+                  allActive || someActive ? "text-white" : s.color
+                )} />
+                <p className="text-xl font-bold">{s.value}</p>
+                <p className="text-[8px] uppercase font-black tracking-widest opacity-70">{s.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
