@@ -24,7 +24,16 @@ export type AnalyzeSuspiciousTextInput = z.infer<typeof AnalyzeSuspiciousTextInp
 const AnalyzeSuspiciousTextOutputSchema = z.object({
   riskPercentage: z.number().int().min(0).max(100).describe('The probability of the text being a scam, as a percentage (0-100).'),
   riskLevel: z.enum(['Baixo risco', 'Médio risco', 'Alto risco', 'Muito alto risco']).describe('The categorized risk level of the text.'),
-  scamType: z.string().describe('The identified type of digital scam (e.g., "Phishing / fraude bancária", "Falso suporte técnico", "Falsa entrega", "Falso emprego").'),
+  scamType: z.enum([
+    'Phishing',
+    'Fake Bank Alert',
+    'Fake Delivery',
+    'Fake Support',
+    'Payment Scam',
+    'Identity Scam',
+    'Fake Job Offer',
+    'Urgent Manipulation'
+  ]).describe('The identified type of digital scam.'),
   reasons: z.array(z.string()).describe('A list of specific reasons why the text is suspicious.'),
   recommendations: z.array(z.string()).describe('A list of practical actions the user should take.'),
 });
@@ -37,7 +46,7 @@ const analyzeSuspiciousTextPrompt = ai.definePrompt({
   name: 'analyzeSuspiciousTextPrompt',
   input: { schema: AnalyzeSuspiciousTextInputSchema },
   output: { schema: AnalyzeSuspiciousTextOutputSchema },
-  prompt: `Você é um especialista em cibersegurança e detecção de fraudes digitais. Analise a mensagem de texto fornecida para identificar golpes, phishing ou burlas.
+  prompt: `Você é um especialista em cibersegurança e detecção de fraudes digitais da ShieldCheck AI. Analise a mensagem de texto fornecida para identificar golpes, phishing ou burlas.
 
 Sua análise deve ser rigorosa:
 - "Baixo risco": Mensagens informativas claras de fontes conhecidas.
@@ -45,12 +54,15 @@ Sua análise deve ser rigorosa:
 - "Alto risco": Linguagem de urgência, erros gramaticais, pedidos de dados pessoais.
 - "Muito alto risco": Phishing bancário direto, links para domínios maliciosos confirmados, personificação de autoridades ou familiares.
 
-Padrões a procurar:
-- Urgência exagerada ("Sua conta será bloqueada AGORA").
-- Links suspeitos (Ex: bit.ly, ou domínios que imitam marcas reais).
-- Erros de português ou português de tradutor automático.
-- Promessas irrealistas (Prêmios, empregos fáceis).
-- Personificação (Bancos, CTT, Finanças, WhatsApp/Meta).
+Categorias de Fraude (scamType):
+- 'Phishing': Roubo de credenciais via links.
+- 'Fake Bank Alert': Mensagens falsas de bancos.
+- 'Fake Delivery': Avisos falsos de encomendas retidas.
+- 'Fake Support': Problemas técnicos falsos.
+- 'Payment Scam': Pedidos de MBWay ou faturas falsas.
+- 'Identity Scam': Fingir ser familiar (WhatsApp).
+- 'Fake Job Offer': Promessas de emprego fácil.
+- 'Urgent Manipulation': Pressão psicológica ("Sua conta será encerrada").
 
 Mensagem Suspeita:
 {{{text}}}`,
