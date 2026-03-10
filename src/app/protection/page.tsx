@@ -11,8 +11,8 @@ import { doc } from "firebase/firestore";
 import { notificationService } from "@/lib/notification-service";
 
 export default function ProtectionPage() {
-  const { user } = user ? useUser() : { user: null };
-  const { firestore } = firestore ? useFirestore() : { firestore: null };
+  const { user } = useUser();
+  const { firestore } = useFirestore();
 
   const settingsRef = user && firestore ? doc(firestore, "users", user.uid, "settings") : null;
   const { data: settings } = useDoc(settingsRef);
