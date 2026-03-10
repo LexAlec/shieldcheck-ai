@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageSquare, Link as LinkIcon, Image as ImageIcon, History, BookOpen, Crown, ShieldCheck } from "lucide-react";
+import { MessageSquare, Link as LinkIcon, Image as ImageIcon, History, BookOpen, Crown, ShieldCheck, Zap } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 
 export default function Dashboard() {
@@ -45,15 +45,20 @@ export default function Dashboard() {
       </header>
 
       <section className="space-y-4">
-        <div className="bg-primary rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-primary/20">
-          <div className="relative z-10 space-y-2">
-            <h2 className="text-2xl font-bold leading-tight">Estás seguro hoje?</h2>
-            <p className="text-white/80 text-sm">Protege os teus dados e evita burlas digitais antes que aconteçam.</p>
+        <Link href="/protection">
+          <div className="bg-primary rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-[0.98]">
+            <div className="relative z-10 space-y-2">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
+                <h2 className="text-2xl font-bold leading-tight">Proteção em Tempo Real</h2>
+              </div>
+              <p className="text-white/80 text-sm">Protege os teus dados e evita burlas digitais antes que aconteçam.</p>
+            </div>
+            <div className="absolute right-[-20px] bottom-[-20px] opacity-10">
+              <ShieldCheck className="w-32 h-32" />
+            </div>
           </div>
-          <div className="absolute right-[-20px] bottom-[-20px] opacity-10">
-            <ShieldCheck className="w-32 h-32" />
-          </div>
-        </div>
+        </Link>
       </section>
 
       <section className="space-y-4">
