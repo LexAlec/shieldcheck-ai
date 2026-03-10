@@ -176,14 +176,16 @@ export default function ProtectionSettingsPage() {
             <AlertDialogTitle className="text-lg leading-tight">
               {pendingPermission?.title}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-muted-foreground pt-2">
-              {pendingPermission?.description}
-              <div className="mt-4 p-3 bg-gray-50 rounded-2xl text-[10px] font-mono text-left space-y-1">
-                {pendingPermission?.permissions.map(p => (
-                   <div key={p} className="flex items-center gap-2">
-                     <Key className="w-3 h-3" /> {p}
-                   </div>
-                ))}
+            <AlertDialogDescription className="text-xs text-muted-foreground pt-2" asChild>
+              <div>
+                {pendingPermission?.description}
+                <div className="mt-4 p-3 bg-gray-50 rounded-2xl text-[10px] font-mono text-left space-y-1">
+                  {pendingPermission?.permissions.map(p => (
+                     <div key={p} className="flex items-center gap-2">
+                       <Key className="w-3 h-3" /> {p}
+                     </div>
+                  ))}
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
