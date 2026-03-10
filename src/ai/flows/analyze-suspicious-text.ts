@@ -24,56 +24,40 @@ export type AnalyzeSuspiciousTextInput = z.infer<typeof AnalyzeSuspiciousTextInp
 const AnalyzeSuspiciousTextOutputSchema = z.object({
   riskPercentage: z.number().int().min(0).max(100).describe('The probability of the text being a scam, as a percentage (0-100).'),
   riskLevel: z.enum(['Baixo risco', 'Médio risco', 'Alto risco', 'Muito alto risco']).describe('The categorized risk level of the text.'),
-  scamType: z.string().describe('The identified type of digital scam (e.g., "Phishing / fraude bancária", "Falso suporte técnico").'),
+  scamType: z.string().describe('The identified type of digital scam (e.g., "Phishing / fraude bancária", "Falso suporte técnico", "Falsa entrega", "Falso emprego").'),
   reasons: z.array(z.string()).describe('A list of specific reasons why the text is suspicious.'),
   recommendations: z.array(z.string()).describe('A list of practical actions the user should take.'),
 });
 export type AnalyzeSuspiciousTextOutput = z.infer<typeof AnalyzeSuspiciousTextOutputSchema>;
 
 /**
- * Analyzes a suspicious text message for potential scams.
- *
- * @param input The text message to analyze.
- * @returns The analysis result including risk level, scam type, reasons, and recommendations.
- */
-export async function analyzeSuspiciousText(input: AnalyzeSuspiciousTextInput): Promise<AnalyzeSuspiciousTextOutput> {
-  return analyzeSuspiciousTextFlow(input);
-}
-
-/**
  * Genkit prompt definition for analyzing suspicious text.
- * Instructs the AI to act as a scam detection expert and output a structured JSON response.
  */
 const analyzeSuspiciousTextPrompt = ai.definePrompt({
   name: 'analyzeSuspiciousTextPrompt',
   input: { schema: AnalyzeSuspiciousTextInputSchema },
   output: { schema: AnalyzeSuspiciousTextOutputSchema },
-  prompt: `You are an expert in digital scam detection, product manager, UX designer, and senior software engineer specializing in AI mobile applications. Your task is to analyze the provided text message and determine if it is a digital scam, phishing attempt, or other fraudulent activity.
+  prompt: `Você é um especialista em cibersegurança e detecção de fraudes digitais. Analise a mensagem de texto fornecida para identificar golpes, phishing ou burlas.
 
-Analyze the following text message for any signs of scams, phishing, fraud, fake technical support, fake prizes, fake bank transfers, fake jobs, or other digital fraud.
-Look for the following patterns:
-- Exaggerated urgency, threats, or pressure.
-- Requests for money, personal data, bank details, or passwords.
-- Suspicious links, strange domains, or URL shorteners.
-- Spelling or grammatical errors.
-- Unrealistic promises or offers (e.g., fake prizes).
-- Messages impersonating known entities like banks, mobile operators, delivery services, or technical support.
-- False senders or manipulative language.
+Sua análise deve ser rigorosa:
+- "Baixo risco": Mensagens informativas claras de fontes conhecidas.
+- "Médio risco": Promoções genéricas ou links encurtados sem contexto.
+- "Alto risco": Linguagem de urgência, erros gramaticais, pedidos de dados pessoais.
+- "Muito alto risco": Phishing bancário direto, links para domínios maliciosos confirmados, personificação de autoridades ou familiares.
 
-Based on your analysis, provide a structured response in JSON format according to the output schema.
-The risk level should be one of "Baixo risco", "Médio risco", "Alto risco", or "Muito alto risco".
-Provide a clear percentage of risk.
-Identify the type of scam.
-List specific reasons for suspicion.
-Provide practical recommendations on what the user should do next.
+Padrões a procurar:
+- Urgência exagerada ("Sua conta será bloqueada AGORA").
+- Links suspeitos (Ex: bit.ly, ou domínios que imitam marcas reais).
+- Erros de português ou português de tradutor automático.
+- Promessas irrealistas (Prêmios, empregos fáceis).
+- Personificação (Bancos, CTT, Finanças, WhatsApp/Meta).
 
-Suspicious Text:
+Mensagem Suspeita:
 {{{text}}}`,
 });
 
 /**
  * Genkit flow definition for analyzing suspicious text.
- * Orchestrates the call to the AI prompt and handles the output.
  */
 const analyzeSuspiciousTextFlow = ai.defineFlow(
   {
@@ -84,8 +68,12 @@ const analyzeSuspiciousTextFlow = ai.defineFlow(
   async (input) => {
     const { output } = await analyzeSuspiciousTextPrompt(input);
     if (!output) {
-      throw new Error('Failed to analyze suspicious text: no output from AI model.');
+      throw new Error('Erro ao analisar o texto suspeito.');
     }
     return output;
   }
 );
+
+export async function analyzeSuspiciousText(input: AnalyzeSuspiciousTextInput): Promise<AnalyzeSuspiciousTextOutput> {
+  return analyzeSuspiciousTextFlow(input);
+}

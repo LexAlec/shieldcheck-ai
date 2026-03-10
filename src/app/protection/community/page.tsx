@@ -1,7 +1,7 @@
 "use client";
 
 import { Navbar } from "@/components/layout/Navbar";
-import { Users, AlertTriangle, ArrowLeft, Search, Filter } from "lucide-react";
+import { Users, AlertTriangle, ArrowLeft, Search, Filter, ShieldAlert, Calendar, MessageSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ export default function CommunityReportsPage() {
 
   const reportsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "community_scam_reports"), orderBy("reportTimestamp", "desc"), limit(20));
+    return query(collection(firestore, "community_scam_reports"), orderBy("reportTimestamp", "desc"), limit(30));
   }, [firestore]);
 
   const { data: reports, isLoading } = useCollection(reportsQuery);
@@ -34,58 +34,81 @@ export default function CommunityReportsPage() {
         </div>
       </div>
 
-      <div className="bg-indigo-600 rounded-3xl p-6 text-white space-y-2 shadow-lg shadow-indigo-500/20">
-        <div className="flex items-center gap-2">
-           <Users className="w-5 h-5 text-indigo-200" />
-           <h2 className="font-bold">Inteligência Coletiva</h2>
+      <div className="bg-indigo-600 rounded-[2rem] p-6 text-white space-y-3 shadow-lg shadow-indigo-500/20 relative overflow-hidden">
+        <div className="relative z-10 space-y-2">
+           <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-indigo-200" />
+              <h2 className="font-bold">Inteligência Coletiva</h2>
+           </div>
+           <p className="text-xs text-indigo-100 leading-relaxed">
+             Estes números foram reportados por utilizadores como tu. Juntos criamos um escudo contra burlas em tempo real.
+           </p>
         </div>
-        <p className="text-xs text-indigo-100 leading-relaxed">
-          Estes números foram reportados por outros utilizadores do ShieldCheck. Ajuda a comunidade denunciando chamadas suspeitas.
-        </p>
+        <ShieldAlert className="absolute right-[-20px] bottom-[-20px] w-24 h-24 text-white/10" />
       </div>
 
       <div className="flex gap-2">
-        <div className="glass-card flex-1 flex items-center gap-2 px-4 py-2">
+        <div className="glass-card flex-1 flex items-center gap-2 px-4 py-2 border-2 border-transparent focus-within:border-primary/20 transition-all">
           <Search className="w-5 h-5 text-muted-foreground" />
-          <Input placeholder="Pesquisar..." className="border-0 focus-visible:ring-0 bg-transparent h-8" />
+          <Input placeholder="Pesquisar número ou tipo..." className="border-0 focus-visible:ring-0 bg-transparent h-8 text-sm" />
         </div>
-        <Button variant="outline" size="icon" className="rounded-xl h-12 w-12 border-white/20 bg-white">
-          <Filter className="w-5 h-5 text-gray-400" />
-        </Button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
+        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Números Recentemente Reportados</h3>
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-10">A carregar base comunitária...</p>
+          <div className="space-y-3">
+             {[1, 2, 3].map(i => (
+               <div key={i} className="glass-card h-32 animate-pulse bg-gray-100" />
+             ))}
+          </div>
         ) : reports && reports.length > 0 ? (
           reports.map((report) => (
-            <div key={report.id} className="glass-card border-l-4 border-orange-400 space-y-3">
+            <div key={report.id} className="glass-card border-l-4 border-red-400 space-y-3 hover:scale-[1.01] transition-transform">
               <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-bold text-gray-800">{report.phoneNumber}</h4>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase">{report.scamType}</p>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                    {report.reportType === 'Call' ? <Phone className="w-3 h-3 text-blue-500" /> : <MessageSquare className="w-3 h-3 text-cyan-500" />}
+                    {report.phoneNumber}
+                  </h4>
+                  <Badge variant="outline" className="text-[9px] h-4 uppercase font-extrabold bg-red-50 text-red-700 border-red-100">
+                    {report.scamType}
+                  </Badge>
                 </div>
-                <Badge variant="outline" className="text-[10px] h-5 bg-orange-50 text-orange-700 border-orange-100">
-                  {report.reportType}
-                </Badge>
+                <div className="flex flex-col items-end">
+                   <span className="text-[10px] font-bold text-indigo-600 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> Verificado
+                   </span>
+                   <span className="text-[9px] text-muted-foreground font-medium flex items-center gap-1 mt-1">
+                      <Calendar className="w-2.5 h-2.5" />
+                      {format(new Date(report.reportTimestamp), "dd MMM HH:mm", { locale: pt })}
+                   </span>
+                </div>
               </div>
+              
               {report.reportedContent && (
-                <p className="text-xs text-muted-foreground italic line-clamp-2 bg-gray-50 p-2 rounded-lg">
-                  "{report.reportedContent}"
-                </p>
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                   <p className="text-xs text-gray-600 italic line-clamp-2">
+                    "{report.reportedContent}"
+                  </p>
+                </div>
               )}
-              <div className="flex justify-between items-center pt-1">
-                <span className="text-[10px] text-muted-foreground">
-                  Reportado em {format(new Date(report.reportTimestamp), "dd MMM", { locale: pt })}
-                </span>
-                <span className="text-[10px] font-bold text-indigo-600">Verificado</span>
+
+              <div className="flex justify-between items-center pt-1 border-t border-gray-100 mt-2 text-[10px]">
+                <div className="flex gap-3">
+                   <span className="text-muted-foreground"><span className="font-bold text-gray-700">1</span> Relato</span>
+                   <span className="text-muted-foreground"><span className="font-bold text-gray-700">8</span> Bloqueios</span>
+                </div>
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] font-bold text-indigo-600 hover:bg-indigo-50">
+                   Ver Detalhes
+                </Button>
               </div>
             </div>
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-50">
             <AlertTriangle className="w-12 h-12 text-muted-foreground" />
-            <p className="text-sm font-medium">Sem relatos recentes na tua área.</p>
+            <p className="text-sm font-medium">Sem relatos recentes na base de dados.</p>
           </div>
         )}
       </div>

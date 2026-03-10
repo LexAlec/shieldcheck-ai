@@ -1,22 +1,29 @@
-
 "use client";
 
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
-import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight, Lock, Shield } from "lucide-react";
+import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight, Lock, Shield, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDoc, useUser, useFirestore } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 export default function ProtectionPage() {
+  const { user } = useUser();
+  const { firestore } = useFirestore();
+
+  const settingsRef = user ? doc(firestore, "users", user.uid, "settings") : null;
+  const { data: settings } = useDoc(settingsRef);
+
   const stats = [
-    { label: "Chamadas Bloqueadas", value: "12", icon: Phone, color: "text-blue-500" },
-    { label: "SMS Suspeitos", value: "24", icon: MessageSquare, color: "text-cyan-500" },
+    { label: "Alertas Evitados", value: "12", icon: ShieldCheck, color: "text-green-500" },
+    { label: "Números Bloqueados", value: "24", icon: Ban, color: "text-red-500" },
   ];
 
   const tools = [
-    { title: "Simular Alerta de Chamada", href: "/protection/alerts/call", icon: Phone, color: "bg-blue-500", desc: "Teste o sistema de detecção de voz" },
-    { title: "Simular Alerta de SMS", href: "/protection/alerts/sms", icon: MessageSquare, color: "bg-cyan-500", desc: "Teste a análise de mensagens curtas" },
+    { title: "Testar Alerta de Chamada", href: "/protection/alerts/call", icon: Phone, color: "bg-blue-500", desc: "Simular detecção de voz fraudulenta" },
+    { title: "Testar Alerta de SMS", href: "/protection/alerts/sms", icon: MessageSquare, color: "bg-cyan-500", desc: "Simular análise de links phishing" },
   ];
 
   const lists = [
@@ -24,6 +31,8 @@ export default function ProtectionPage() {
     { title: "Números Confiáveis", href: "/protection/trusted", icon: ShieldCheck, color: "bg-green-500" },
     { title: "Base Comunitária", href: "/protection/community", icon: Users, color: "bg-indigo-500" },
   ];
+
+  const isProtectionActive = settings?.isCallProtectionEnabled || settings?.isSmsProtectionEnabled;
 
   return (
     <div className="flex-1 flex flex-col p-6 pb-24 space-y-8 overflow-y-auto bg-gray-50/50">
@@ -44,11 +53,26 @@ export default function ProtectionPage() {
       <section className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-            <span className="font-bold text-gray-700">Proteção em Tempo Real</span>
+            <div className={`w-3 h-3 rounded-full ${isProtectionActive ? "bg-green-500 animate-pulse" : "bg-gray-300"}`} />
+            <span className="font-bold text-gray-700">Monitorização em Tempo Real</span>
           </div>
-          <Badge className="bg-green-100 text-green-700 border-green-200">Ativa</Badge>
+          <Badge className={isProtectionActive ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-500 border-gray-200"}>
+            {isProtectionActive ? "Ativa" : "Desativada"}
+          </Badge>
         </div>
+
+        {!isProtectionActive && (
+          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3 items-start">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-amber-800 leading-none">Proteção Desligada</p>
+              <p className="text-[10px] text-amber-700 leading-tight">Ativa os filtros nas definições para detetar burlas automaticamente.</p>
+              <Link href="/protection/settings" className="text-[10px] font-bold text-amber-600 underline flex items-center gap-1">
+                Ativar Agora <ArrowRight className="w-2 h-2" />
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           {stats.map((s, i) => (
@@ -67,14 +91,14 @@ export default function ProtectionPage() {
             <div className="relative z-10 space-y-3">
               <div className="flex items-center gap-2">
                 <Lock className="w-5 h-5 text-blue-200" />
-                <h3 className="font-bold">Privacidade & Segurança</h3>
+                <h3 className="font-bold">Privacidade Android</h3>
               </div>
               <p className="text-xs text-blue-100 leading-relaxed">
-                As tuas mensagens e chamadas são analisadas localmente no dispositivo. Nunca enviamos o conteúdo das tuas mensagens privadas para os nossos servidores.
+                As tuas mensagens e chamadas são analisadas localmente. O ShieldCheck nunca bloqueia nada sem a tua autorização explícita.
               </p>
               <Link href="/protection/settings">
                 <Button variant="link" className="text-white p-0 h-auto font-bold text-xs underline">
-                  Gerir Permissões
+                  Ver Permissões
                 </Button>
               </Link>
             </div>
@@ -104,7 +128,7 @@ export default function ProtectionPage() {
 
       <section className="space-y-4 pb-4">
         <div className="flex items-center justify-between px-1">
-          <h3 className="font-bold text-lg text-gray-800">Ferramentas de Teste</h3>
+          <h3 className="font-bold text-lg text-gray-800">Ferramentas de Simulação</h3>
           <AlertCircle className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="grid grid-cols-1 gap-3">
