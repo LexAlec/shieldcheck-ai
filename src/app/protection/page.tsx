@@ -1,15 +1,17 @@
+
 "use client";
 
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
-import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight } from "lucide-react";
+import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight, Lock, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function ProtectionPage() {
   const stats = [
-    { label: "Chamadas Bloqueadas", value: "0", icon: Phone, color: "text-blue-500" },
-    { label: "SMS Suspeitos", value: "0", icon: MessageSquare, color: "text-cyan-500" },
+    { label: "Chamadas Bloqueadas", value: "12", icon: Phone, color: "text-blue-500" },
+    { label: "SMS Suspeitos", value: "24", icon: MessageSquare, color: "text-cyan-500" },
   ];
 
   const tools = [
@@ -43,9 +45,9 @@ export default function ProtectionPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-            <span className="font-bold text-gray-700">Sistema Ligado</span>
+            <span className="font-bold text-gray-700">Proteção em Tempo Real</span>
           </div>
-          <Badge className="bg-green-100 text-green-700 border-green-200">Seguro</Badge>
+          <Badge className="bg-green-100 text-green-700 border-green-200">Ativa</Badge>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -57,6 +59,28 @@ export default function ProtectionPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <Card className="rounded-[2rem] border-0 shadow-sm bg-blue-600 text-white overflow-hidden">
+          <CardContent className="p-6 relative">
+            <div className="relative z-10 space-y-3">
+              <div className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-blue-200" />
+                <h3 className="font-bold">Privacidade & Segurança</h3>
+              </div>
+              <p className="text-xs text-blue-100 leading-relaxed">
+                As tuas mensagens e chamadas são analisadas localmente no dispositivo. Nunca enviamos o conteúdo das tuas mensagens privadas para os nossos servidores.
+              </p>
+              <Link href="/protection/settings">
+                <Button variant="link" className="text-white p-0 h-auto font-bold text-xs underline">
+                  Gerir Permissões
+                </Button>
+              </Link>
+            </div>
+            <Shield className="absolute right-[-20px] bottom-[-20px] w-32 h-32 text-white/10" />
+          </CardContent>
+        </Card>
       </section>
 
       <section className="space-y-4">
@@ -78,7 +102,7 @@ export default function ProtectionPage() {
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4 pb-4">
         <div className="flex items-center justify-between px-1">
           <h3 className="font-bold text-lg text-gray-800">Ferramentas de Teste</h3>
           <AlertCircle className="w-4 h-4 text-muted-foreground" />

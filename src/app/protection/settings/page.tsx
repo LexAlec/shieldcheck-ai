@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { Settings, ShieldCheck, Phone, MessageSquare, ArrowLeft, Lock, Info } from "lucide-react";
+import { Settings, ShieldCheck, Phone, MessageSquare, ArrowLeft, Lock, Info, Key, Shield, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -32,9 +33,15 @@ export default function ProtectionSettingsPage() {
 
     toast({
       title: "Definições atualizadas",
-      description: "A tua proteção foi configurada com sucesso."
+      description: "A tua preferência de proteção foi guardada."
     });
   };
+
+  const permissions = [
+    { label: "Acesso a SMS", desc: "READ_SMS, RECEIVE_SMS", key: "perm_sms", default: true },
+    { label: "Registo de Chamadas", desc: "READ_CALL_LOG", key: "perm_call_log", default: true },
+    { label: "Serviço de Triagem", desc: "CALL_SCREENING_SERVICE", key: "perm_screening", default: true },
+  ];
 
   return (
     <div className="flex-1 flex flex-col p-6 pb-24 space-y-6 overflow-y-auto bg-gray-50/50">
@@ -48,6 +55,7 @@ export default function ProtectionSettingsPage() {
       </div>
 
       <section className="space-y-4">
+        <h3 className="text-xs font-bold text-muted-foreground uppercase px-1 tracking-wider">Proteção Geral</h3>
         <div className="glass-card space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -84,36 +92,44 @@ export default function ProtectionSettingsPage() {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-xs font-bold text-muted-foreground uppercase px-1 tracking-wider">Avançado</h3>
+        <div className="flex items-center gap-2 px-1">
+          <Smartphone className="w-4 h-4 text-gray-400" />
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Permissões Android</h3>
+        </div>
         <div className="glass-card space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
+          {permissions.map((perm) => (
+            <div key={perm.key} className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-sm font-bold">Base de Dados Local</Label>
-                <p className="text-[10px] text-muted-foreground leading-none">Permite análise offline rápida</p>
+                <Label className="text-sm font-bold">{perm.label}</Label>
+                <p className="text-[10px] text-muted-foreground font-mono leading-none">{perm.desc}</p>
               </div>
+              <Switch checked={perm.default} />
             </div>
-            <Switch checked={true} disabled />
-          </div>
+          ))}
         </div>
       </section>
 
-      <div className="bg-blue-50 border border-blue-100 rounded-3xl p-5 space-y-3">
+      <div className="bg-blue-50 border border-blue-100 rounded-3xl p-5 space-y-4">
         <div className="flex items-center gap-2 text-blue-700">
-          <Info className="w-4 h-4" />
-          <h4 className="text-[10px] font-bold uppercase tracking-wider">Como funciona?</h4>
+          <Shield className="w-5 h-5" />
+          <h4 className="text-sm font-bold">Compromisso de Privacidade</h4>
         </div>
-        <p className="text-xs text-blue-900 leading-relaxed font-medium">
-          O ShieldCheck nunca bloqueia chamadas ou SMS automaticamente sem a tua permissão expressa. Quando um risco é detetado, mostramos-te um alerta e tu decides o que fazer.
+        <p className="text-xs text-blue-900 leading-relaxed">
+          O ShieldCheck AI foi desenhado para respeitar a tua privacidade. Todo o conteúdo de SMS e registos de chamadas é analisado **localmente** utilizando modelos de IA otimizados para o dispositivo.
         </p>
+        <ul className="space-y-2">
+          <li className="flex gap-2 text-[10px] text-blue-800 font-medium">
+            <ShieldCheck className="w-3 h-3 shrink-0" /> Sem envio de mensagens privadas para a cloud.
+          </li>
+          <li className="flex gap-2 text-[10px] text-blue-800 font-medium">
+            <ShieldCheck className="w-3 h-3 shrink-0" /> Bloqueio apenas com o teu consentimento explícito.
+          </li>
+        </ul>
       </div>
 
       <div className="flex flex-col items-center gap-2 pt-6 opacity-30">
         <Lock className="w-4 h-4" />
-        <span className="text-[10px] font-bold uppercase tracking-widest">Privacidade Blindada</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest">Segurança Android-First</span>
       </div>
 
       <Navbar />
