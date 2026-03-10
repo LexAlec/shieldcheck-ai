@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 export const metadata: Metadata = {
   title: 'ShieldCheck AI - Proteção contra Golpes Digitais',
@@ -20,10 +21,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-gray-50 md:bg-gray-100 flex items-center justify-center min-h-screen">
-        <div className="mobile-container shadow-2xl overflow-y-auto">
-          {children}
-        </div>
-        <Toaster />
+        <FirebaseClientProvider>
+          <div className="mobile-container shadow-2xl overflow-y-auto">
+            {children}
+          </div>
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );
