@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { NotificationSimulator } from "@/components/scam/NotificationSimulator";
 
 export const metadata: Metadata = {
   title: 'ShieldCheck AI - Proteção contra Golpes Digitais',
@@ -22,6 +23,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-gray-50 md:bg-gray-100 flex items-center justify-center min-h-screen">
         <FirebaseClientProvider>
+          <NotificationSimulator />
           <div className="mobile-container shadow-2xl overflow-y-auto">
             {children}
           </div>

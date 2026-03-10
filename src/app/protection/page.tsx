@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDoc, useUser, useFirestore } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { notificationService } from "@/lib/notification-service";
 
 export default function ProtectionPage() {
-  const { user } = useUser();
-  const { firestore } = useFirestore();
+  const { user } = user ? useUser() : { user: null };
+  const { firestore } = firestore ? useFirestore() : { firestore: null };
 
-  const settingsRef = user ? doc(firestore, "users", user.uid, "settings") : null;
+  const settingsRef = user && firestore ? doc(firestore, "users", user.uid, "settings") : null;
   const { data: settings } = useDoc(settingsRef);
 
   const stats = [
@@ -22,8 +23,20 @@ export default function ProtectionPage() {
   ];
 
   const tools = [
-    { title: "Testar Alerta de Chamada", href: "/protection/alerts/call", icon: Phone, color: "bg-blue-500", desc: "Simular detecção de voz fraudulenta" },
-    { title: "Testar Alerta de SMS", href: "/protection/alerts/sms", icon: MessageSquare, color: "bg-cyan-500", desc: "Simular análise de links phishing" },
+    { 
+      title: "Simular Alerta de Chamada", 
+      onClick: () => notificationService.simulateScam('call'),
+      icon: Phone, 
+      color: "bg-blue-500", 
+      desc: "Simular detecção de voz fraudulenta" 
+    },
+    { 
+      title: "Simular Alerta de SMS", 
+      onClick: () => notificationService.simulateScam('sms'),
+      icon: MessageSquare, 
+      color: "bg-cyan-500", 
+      desc: "Simular análise de links phishing" 
+    },
   ];
 
   const lists = [
@@ -128,12 +141,12 @@ export default function ProtectionPage() {
 
       <section className="space-y-4 pb-4">
         <div className="flex items-center justify-between px-1">
-          <h3 className="font-bold text-lg text-gray-800">Ferramentas de Simulação</h3>
+          <h3 className="font-bold text-lg text-gray-800">Simulação em Tempo Real</h3>
           <AlertCircle className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="grid grid-cols-1 gap-3">
-          {tools.map((tool) => (
-            <Link key={tool.href} href={tool.href}>
+          {tools.map((tool, idx) => (
+            <button key={idx} onClick={tool.onClick} className="w-full text-left">
               <div className="glass-card border-dashed border-2 flex items-center gap-4 hover:bg-white transition-all active:scale-[0.98]">
                 <div className={`${tool.color} p-3 rounded-xl text-white`}>
                   <tool.icon className="w-5 h-5" />
@@ -143,7 +156,7 @@ export default function ProtectionPage() {
                   <p className="text-[10px] text-muted-foreground leading-none mt-1">{tool.desc}</p>
                 </div>
               </div>
-            </Link>
+            </button>
           ))}
         </div>
       </section>
