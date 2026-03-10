@@ -1,9 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
-import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight, Lock, Shield, ArrowRight, ShieldAlert, ShieldIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Zap, Phone, MessageSquare, Ban, ShieldCheck, Settings, Users, AlertCircle, ChevronRight, Lock, Shield, ArrowRight, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDoc, useUser, useFirestore } from "@/firebase";
@@ -90,12 +90,12 @@ export default function ProtectionPage() {
                 ) : someActive ? (
                   <ShieldAlert className="w-6 h-6" />
                 ) : (
-                  <ShieldIcon className="w-6 h-6 text-gray-400" />
+                  <Shield className="w-6 h-6 text-gray-400" />
                 )}
               </div>
               <div className="space-y-0.5">
                 <h2 className="text-xl font-black leading-tight">
-                  {allActive ? "Maximum protection enabled" : someActive ? "Protection incomplete" : "Proteção Desativada"}
+                  {allActive ? "Proteção máxima ativa" : someActive ? "Proteção incompleta" : "Proteção Desativada"}
                 </h2>
                 <p className={cn(
                   "text-xs font-medium opacity-80",

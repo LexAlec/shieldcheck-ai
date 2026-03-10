@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "security-shield",
+      "description": "A high-tech digital shield representing protection.",
+      "imageUrl": "https://picsum.photos/seed/shield-check/600/400",
+      "imageHint": "digital security"
+    },
+    {
+      "id": "scam-alert",
+      "description": "Warning notification on a mobile screen.",
+      "imageUrl": "https://picsum.photos/seed/scam-alert/600/400",
+      "imageHint": "warning alert"
+    },
+    {
+      "id": "locked-phone",
+      "description": "Secure smartphone with biometric lock.",
+      "imageUrl": "https://picsum.photos/seed/secure-phone/600/400",
+      "imageHint": "secure smartphone"
+    }
+  ]
 }
